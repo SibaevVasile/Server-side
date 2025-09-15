@@ -26,4 +26,11 @@ export class PizzasService {
     }
     return pizza;
   }
+  create(pizzaData: { name: string; price: number }) {
+    const newId = this.pizzas.length > 0 ? this.pizzas[this.pizzas.length - 1].id + 1 : 1;
+    const newPizza = { id: newId, ...pizzaData };
+    this.pizzas.push(newPizza);
+    return newPizza;
+  }
 }
+
