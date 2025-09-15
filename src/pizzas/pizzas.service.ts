@@ -32,5 +32,23 @@ export class PizzasService {
     this.pizzas.push(newPizza);
     return newPizza;
   }
+  
+  search(name?: string, minPrice?: number, maxPrice?: number) {
+    let results = this.pizzas;
+
+    if (name) {
+      results = results.filter((p) =>
+        p.name.toLowerCase().includes(name.toLowerCase()),
+      );
+    }
+    if (minPrice) {
+      results = results.filter((p) => p.price >= minPrice);
+    }
+    if (maxPrice) {
+      results = results.filter((p) => p.price <= maxPrice);
+    }
+
+    return results;
+  }
 }
 
