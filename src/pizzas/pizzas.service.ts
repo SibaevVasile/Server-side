@@ -1,5 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 
+export interface Pizza {
+  id: number;
+  name: string;
+  price: number;
+}
+
 @Injectable()
 export class PizzasService {
   private pizzas = [
@@ -26,6 +32,29 @@ export class PizzasService {
     }
     return pizza;
   }
+  
+  add(pizza: Omit<Pizza, 'id'>) {
+    const newPizza: Pizza = {
+      id: this.pizzas.length + 1,
+      ...pizza,
+    };
+    this.pizzas.push(newPizza);
+    return newPizza;
+  }
+
+  update(id: number, pizzaData: Partial<Pizza>) {
+    const pizzaIndex = this.pizzas.findIndex(p => p.id === id);
+    if (pizzaIndex === -1) throw new NotFoundException(`Pizza cu id=${id} nu există`);
+    this.pizzas[pizzaIndex] = { ...this.pizzas[pizzaIndex], ...pizzaData };
+    return this.pizzas[pizzaIndex];
+  }
+
+  delete(id: number) {
+    const index = this.pizzas.findIndex(p => p.id === id);
+    if (index === -1) throw new NotFoundException(`Pizza cu id=${id} nu există`);
+    return this.pizzas.splice(index, 1)[0];
+  }
+
   create(pizzaData: { name: string; price: number }) {
     const newId = this.pizzas.length > 0 ? this.pizzas[this.pizzas.length - 1].id + 1 : 1;
     const newPizza = { id: newId, ...pizzaData };
