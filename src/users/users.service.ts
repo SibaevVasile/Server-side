@@ -19,4 +19,10 @@ export class UsersService {
     }
     return user;
   }
+
+  findByName(username: string) {
+    return this.users.find(
+      (user) => user.name.toUpperCase() === username.toUpperCase(),
+    );
+  }
 }
