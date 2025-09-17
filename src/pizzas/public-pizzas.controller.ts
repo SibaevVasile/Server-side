@@ -1,5 +1,6 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Query, NotFoundException, UsePipes } from '@nestjs/common';
 import { PizzasService } from './pizzas.service';
+import { UppercasePipe } from '../pipes/uppercase.pipe';
 
 @Controller('pizzas')
 export class PublicPizzasController {
@@ -13,5 +14,16 @@ export class PublicPizzasController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.pizzasService.findOne(+id);
+  }
+
+  // 🔹 Nou endpoint pentru căutare după nume
+  @Get('search/by-name')
+  @UsePipes(UppercasePipe)
+  searchByName(@Query('name') name: string) {
+    const result = this.pizzasService.findByName(name);
+    if (!result) {
+      throw new NotFoundException(`Pizza cu numele ${name} nu există`);
+    }
+    return result;
   }
 }

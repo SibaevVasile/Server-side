@@ -62,6 +62,12 @@ export class PizzasService {
     return newPizza;
   }
   
+  findByName(name: string) {
+  return this.pizzas.find(
+    (pizza) => pizza.name.toUpperCase() === name
+  );
+}
+
   search(name?: string, minPrice?: number, maxPrice?: number) {
     let results = this.pizzas;
 
