@@ -15,10 +15,10 @@ export class UsersController {
   findOne(@Param('id') id: string) {
     return this.usersService.findOne(+id);
   }
-  @Get('test/uppercase')
-  estUppercase(@Query('name', UppercasePipe) name: string) {
-    return { transformedName: name };
-}
+  @Get('uppercase/:id')
+  makeUppercase(@Param('id') id: string) {
+    return this.usersService.transformNameToUppercase(+id);
+  }
 
   @Get('search/by-name')
   searchByUsername(@Query('name', UppercasePipe) name: string) {

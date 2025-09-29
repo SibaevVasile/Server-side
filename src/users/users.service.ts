@@ -19,7 +19,13 @@ export class UsersService {
     }
     return user;
   }
-
+  transformNameToUppercase(id: number) {
+    const user = this.users.find(u => u.id === id);
+    if (!user) throw new NotFoundException(`User cu id ${id} nu există`);
+    
+    user.name = user.name.toUpperCase(); // transformăm și salvăm
+    return user;
+  }
   findByName(username: string) {
     return this.users.find(
       (user) => user.name.toUpperCase() === username.toUpperCase(),
