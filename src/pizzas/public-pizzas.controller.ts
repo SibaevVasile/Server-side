@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, NotFoundException, UsePipes } from '@nestjs/common';
+import { Controller, Get, Put, Delete , Param, Query, NotFoundException, UsePipes } from '@nestjs/common';
 import { PizzasService } from './pizzas.service';
 import { UppercasePipe } from '../pipes/uppercase.pipe';
 

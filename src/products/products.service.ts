@@ -45,10 +45,30 @@ export class ProductsService {
     return newProduct;
   }
 
-  // ----------------- UPDATE -----------------
-  update(id: number, updateProductDto: UpdateProductDto) {
-    const product = this.findOne(id);
+  update(id: number, updateProductDto: UpdateProductDto, fullReplace = false) {
+  const product = this.findOne(id);
+
+  if (fullReplace) {
+    // PUT = înlocuire completă
     Object.assign(product, updateProductDto);
-    return product;
+  } else {
+    // PATCH = actualizare parțială
+    for (const key in updateProductDto) {
+      if (updateProductDto[key] !== undefined) {
+        product[key] = updateProductDto[key];
+      }
+    }
   }
+  return product;
+}
+
+remove(id: number) {
+  const index = this.products.findIndex(p => p.id === id);
+  if (index === -1) throw new NotFoundException(`Produsul cu id ${id} nu există`);
+  
+  const removed = this.products.splice(index, 1);
+  return { message: 'Produs șters cu succes', removed };
+}
+
+
 }
