@@ -4,7 +4,6 @@ import { RequestMethod ,ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  // Activare ValidationPipe global
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true, // elimină câmpurile care nu sunt definite în DTO
