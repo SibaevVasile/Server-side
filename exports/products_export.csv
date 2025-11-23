@@ -1,2 +1,23 @@
 id,name,description,price,category,isAvailable
+1,Pizza Margherita,,70,pizza,true
+2,Pizza Pepperoni,,85,pizza,true
+3,Pizza Quattro Formaggi,,95,pizza,true
+4,Pizza Vegetariana,,75,pizza,false
+5,Pizza Prosciutto,,90,pizza,true
+6,Pizza BBQ Chicken,,100,pizza,true
+7,Pizza Diavola,,95,pizza,false
+8,Pizza Capricciosa,,85,pizza,true
+9,Pizza Tonno,,80,pizza,true
 10,Pizza Hawaii,,85,pasta,true
+11,Pizza test 1,buna,100,pizza,false
+12,Pizza test 2,rau,110,pizza,false
+13,Pizza test 3,bine,120,pizza,false
+14,Pizza test 1,buna,100,pizza,false
+15,Pizza test 2,rau,110,pizza,false
+16,Pizza test 3,bine,120,pizza,false
+17,Pizza test 1,buna,100,pizza,false
+18,Pizza test 2,rau,110,pizza,false
+19,Pizza test 3,bine,120,pizza,false
+20,Pizza Corecta 1,Delicioasa,80,pizza,true
+21,Pizza Corecta 2,Fara gluten,90,pizza,true
+22,Pizza Corecta 3,,100,pizza,false

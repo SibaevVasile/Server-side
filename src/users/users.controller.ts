@@ -1,6 +1,7 @@
-import { Controller, Get, Param, Query, NotFoundException, UsePipes } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, NotFoundException } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { UppercasePipe } from '../pipes/uppercase.pipe';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Controller('users')
 export class UsersController {
@@ -15,17 +16,19 @@ export class UsersController {
   findOne(@Param('id') id: string) {
     return this.usersService.findOne(+id);
   }
-  @Get('uppercase/:id')
-  makeUppercase(@Param('id') id: string) {
-    return this.usersService.transformNameToUppercase(+id);
+
+  @Post()
+  create(@Body() dto: CreateUserDto) {
+    return this.usersService.create(dto);
   }
 
-  @Get('search/by-name')
-  searchByUsername(@Query('name', UppercasePipe) name: string) {
-    const result = this.usersService.findByName(name);
-    if (!result) {
-      throw new NotFoundException(`User cu username-ul ${name} nu există`);
-    }
-    return result;
+  @Put(':id')
+  update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
+    return this.usersService.update(+id, dto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.usersService.remove(+id);
   }
 }

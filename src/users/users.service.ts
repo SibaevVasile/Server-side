@@ -1,36 +1,39 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from './users.entity';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
-  private users = [
-    { id: 1, name: 'Vasile', email: 'vasile@example.com' },
-    { id: 2, name: 'Maria', email: 'maria@example.com' },
-    { id: 3, name: 'Ion', email: 'ion@example.com' },
-  ];
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>
+  ) {}
 
-  findAll() {
-    return this.users;
+  findAll(): Promise<User[]> {
+    return this.userRepo.find();
   }
 
-  findOne(id: number) {
-    const user = this.users.find((u) => u.id === id);
-    if (!user) {
-      throw new NotFoundException(`User with id ${id} not found`);
-    }
-    return user;
-  }
-
-  transformNameToUppercase(id: number) {
-    const user = this.users.find(u => u.id === id);
+  async findOne(id: number): Promise<User> {
+    const user = await this.userRepo.findOneBy({ id });
     if (!user) throw new NotFoundException(`User cu id ${id} nu există`);
-    
-    user.name = user.name.toUpperCase(); // transformăm și salvăm
     return user;
   }
-  
-  findByName(username: string) {
-    return this.users.find(
-      (user) => user.name.toUpperCase() === username.toUpperCase(),
-    );
+
+  create(dto: CreateUserDto): Promise<User> {
+    const user = this.userRepo.create(dto);
+    return this.userRepo.save(user);
+  }
+
+  async update(id: number, dto: UpdateUserDto): Promise<User> {
+    await this.userRepo.update(id, dto);
+    return this.findOne(id);
+  }
+
+  async remove(id: number): Promise<void> {
+    const user = await this.findOne(id);
+    await this.userRepo.remove(user);
   }
 }

@@ -1,108 +1,101 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import type{ CreateProductDto } from './dto/create-product.dto';
-import type{ UpdateProductDto } from './dto/update-product.dto';
-import type{ Product } from './interfaces/product.interface';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+
+import { Product } from './entities/product.entity';
+import { CreateProductDto } from './dto/create-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
+
 import * as fs from 'fs';
 import * as csv from 'fast-csv';
 
 @Injectable()
 export class ProductsService {
-  private products: Product[] = [
-    { id: 1, name: 'Pizza Margherita', description: '', price: 70, category: 'pizza', isAvailable: true },
-    { id: 2, name: 'Pizza Pepperoni', description: '', price: 85, category: 'pizza', isAvailable: true },
-    { id: 3, name: 'Pizza Quattro Formaggi', description: '', price: 95, category: 'pizza', isAvailable: true },
-    { id: 4, name: 'Pizza Vegetariana', description: '', price: 75, category: 'pizza', isAvailable: false },
-    { id: 5, name: 'Pizza Prosciutto', description: '', price: 90, category: 'pizza', isAvailable: true },
-    { id: 6, name: 'Pizza BBQ Chicken', description: '', price: 100, category: 'pizza', isAvailable: true },
-    { id: 7, name: 'Pizza Diavola', description: '', price: 95, category: 'pizza', isAvailable: false },
-    { id: 8, name: 'Pizza Capricciosa', description: '', price: 85, category: 'pizza', isAvailable: true },
-    { id: 9, name: 'Pizza Tonno', description: '', price: 80, category: 'pizza', isAvailable: true },
-    { id: 10, name: 'Pizza Hawaii', description: '', price: 85, category: 'pasta', isAvailable: true },
-  ];
+  constructor(
+    @InjectRepository(Product)
+    private readonly productRepository: Repository<Product>,
+  ) {}
 
-  private nextId = 11;
-
-  // ----------------- LISTARE -----------------
-  getProducts(): Product[] {
-    return this.products;
+  // ---------------------------------------------------
+  // GET ALL
+  // ---------------------------------------------------
+  async getProducts(): Promise<Product[]> {
+    return await this.productRepository.find();
   }
 
-  // ----------------- FIND ONE -----------------
-  findOne(id: number): Product {
-    const product = this.products.find((p) => p.id === id);
-    if (!product) throw new NotFoundException(`Produsul cu id ${id} nu există`);
+  // ---------------------------------------------------
+  // FIND ONE
+  // ---------------------------------------------------
+  async findOne(id: number): Promise<Product> {
+    const product = await this.productRepository.findOne({ where: { id } });
+    if (!product) throw new NotFoundException(`Produsul cu ID ${id} nu există`);
     return product;
   }
 
-  // ----------------- CREATE -----------------
-  create(createProductDto: CreateProductDto): Product {
-    const newProduct: Product = {
-      id: this.nextId++,
-      name: createProductDto.name,
-      description: createProductDto.description || '',
-      price: createProductDto.price,
-      category: createProductDto.category,
-      isAvailable: createProductDto.isAvailable ?? true,
-    };
-    this.products.push(newProduct);
-    return newProduct;
+  // ---------------------------------------------------
+  // CREATE
+  // ---------------------------------------------------
+  async create(createProductDto: CreateProductDto): Promise<Product> {
+    const product = this.productRepository.create(createProductDto);
+    return await this.productRepository.save(product);
   }
 
-  // ----------------- UPDATE -----------------
-  update(id: number, updateProductDto: UpdateProductDto, fullReplace = false): Product {
-    const product = this.findOne(id);
+  // ---------------------------------------------------
+  // UPDATE (PUT sau PATCH)
+  // ---------------------------------------------------
+  async update(id: number, updateDto: UpdateProductDto, fullReplace = false): Promise<Product> {
+    const product = await this.findOne(id);
 
     if (fullReplace) {
-      // PUT = înlocuire completă
-      Object.assign(product, updateProductDto);
+      // FULL REPLACE = PUT
+      const updated = this.productRepository.merge(product, updateDto);
+      return await this.productRepository.save(updated);
     } else {
-      // PATCH = actualizare parțială
-      for (const key in updateProductDto) {
-        if (updateProductDto[key] !== undefined) {
-          (product as any)[key] = updateProductDto[key];
-        }
-      }
+      // PARTIAL UPDATE = PATCH
+      Object.assign(product, updateDto);
+      return await this.productRepository.save(product);
     }
-
-    return product;
   }
 
-  // ----------------- DELETE -----------------
-  remove(id: number) {
-    const index = this.products.findIndex((p) => p.id === id);
-    if (index === -1) throw new NotFoundException(`Produsul cu id ${id} nu există`);
+  // ---------------------------------------------------
+  // DELETE
+  // ---------------------------------------------------
+  async remove(id: number) {
+    const product = await this.findOne(id);
+    await this.productRepository.remove(product);
 
-    const removed = this.products.splice(index, 1);
-    return { message: 'Produs șters cu succes', removed };
+    return { message: 'Produs șters cu succes', removed: product };
   }
 
-  // ----------------- IMPORT CSV -----------------
+  // ---------------------------------------------------
+  // IMPORT CSV → salvează în DB
+  // ---------------------------------------------------
   async importFromCsv(filePath: string) {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       const results: Product[] = [];
       const errors: any[] = [];
       let rowIndex = 0;
 
       fs.createReadStream(filePath)
         .pipe(csv.parse({ headers: true }))
-        .on('data', (row) => {
+        .on('data', async (row) => {
           rowIndex++;
           try {
             if (!row.name || !row.price || !row.category) {
               throw new Error('Câmpuri lipsă');
             }
 
-            const newProduct: Product = {
-              id: this.nextId++,
+            const newProduct = this.productRepository.create({
               name: row.name,
               description: row.description || '',
               price: parseFloat(row.price),
               category: row.category,
               isAvailable: row.isAvailable === 'true',
-            };
+            });
 
-            this.products.push(newProduct);
-            results.push(newProduct);
+            const saved = await this.productRepository.save(newProduct);
+            results.push(saved);
+
           } catch (err: any) {
             errors.push({
               row: rowIndex,
@@ -111,7 +104,7 @@ export class ProductsService {
             });
           }
         })
-        .on('end', () => {
+        .on('end', async () => {
           resolve({
             totalRows: rowIndex,
             successful: results.length,
@@ -124,9 +117,11 @@ export class ProductsService {
     });
   }
 
-  // ----------------- EXPORT CSV -----------------
+  // ---------------------------------------------------
+  // EXPORT CSV → extrage datele din DB
+  // ---------------------------------------------------
   async exportToCsv(products?: Product[]): Promise<string> {
-    const data = products || this.products;
+    const data = products || await this.productRepository.find();
 
     const header = ['id', 'name', 'description', 'price', 'category', 'isAvailable'];
     const rows = data.map(p => [p.id, p.name, p.description, p.price, p.category, p.isAvailable]);
@@ -134,6 +129,7 @@ export class ProductsService {
 
     const dir = './exports';
     if (!fs.existsSync(dir)) fs.mkdirSync(dir);
+
     const filePath = `${dir}/products_export.csv`;
     fs.writeFileSync(filePath, csvContent);
 
